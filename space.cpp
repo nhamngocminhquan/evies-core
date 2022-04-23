@@ -84,7 +84,7 @@ namespace Space {
             comfy = p_comfy;
         }
         // Setters
-        void SetNumberOfSeats(unsigned int p_numberOfSeats);
+        void SetNumberOfSeats(unsigned int p_numberOfSeats) { numberOfSeats = p_numberOfSeats; }
         // Setters using overload
         void IsSlanted(bool p_slanted) { slanted = p_slanted; }
         void IsSurround(bool p_surround) { surround = p_surround; }
@@ -219,7 +219,6 @@ namespace Space {
         // Event-specific characteristics
         // .. Accomodation
         unsigned int numberOfPeople = 0;
-    public:
         Seating seats;
     private:
         bool outdoor = false;
