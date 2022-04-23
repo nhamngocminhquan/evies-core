@@ -17,18 +17,47 @@ namespace Space {
     // .. Currently assume box-like spaces with length-width-height
     class Dimensions {
     private:
-        float length, width, height;
-        float area, aspectRatio;
-        void UpdateAAR();
+        float length = 0, width = 0, height = 0;
+        float area = 0, aspectRatio = 0;
+        void UpdateAAR() {
+            area = length * width;
+            // Check for zero before division
+            if (width * length != 0) {
+                aspectRatio = (length > width) ? (length / width) : (width / length); 
+            } else aspectRatio = 0;
+        }
     public:
-        Dimensions();
-        Dimensions(float p_length, float p_width, float p_height);
-
+        Dimensions() {
+            length = 0;
+            width = 0;
+            height = 0;
+            area = 0;
+            aspectRatio = 0;
+        }
+        Dimensions(float p_length, float p_width, float p_height) {
+            length = p_length;
+            width = p_width;
+            height = p_height;
+            UpdateAAR();
+        }
         // Setters
-        void SetLength(float p_length);
-        void SetWidth(float p_width);
-        void SetHeight(float p_height);
-        void SetDimensions(float p_length, float p_width, float p_height);
+        void SetLength(float p_length) {
+            length = p_length;
+            UpdateAAR();
+        }
+        void SetWidth(float p_width) {
+            width = p_width;
+            UpdateAAR();
+        }
+        void SetHeight(float p_height) {
+            height = p_height;
+        }
+        void SetDimensions(float p_length, float p_width, float p_height) {
+            length = p_length;
+            width = p_width;
+            height = p_height;
+            UpdateAAR();
+        }
         
         // Getters
         float GetLength() { return length; }
@@ -49,9 +78,13 @@ namespace Space {
         // For if the chairs are not cheap plastic
         bool comfy = true;
     public:
-        Seating();
-        Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false);
-
+        Seating(){};
+        Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false) {
+            numberOfSeats = p_numberOfSeats;
+            slanted = p_slanted;
+            surround = p_surround;
+            comfy = p_comfy;
+        }
         // Setters
         void SetNumberOfSeats(unsigned int p_numberOfSeats);
         // Setters using overload
@@ -80,14 +113,19 @@ namespace Space {
         // Price per hour
         double dirhamsPerHour = 0;
     public:
-        Time(double p_dollarPerHour = 0, const time_t& p_originTime = time(NULL)) {
-            originTime = p_originTime + (86400 - p_originTime % 86400);
-            dirhamsPerHour = p_dollarPerHour;
+        Time() {
+            originTime = time(NULL);
+            dirhamsPerHour = 0;
         }
-        Time(double p_dollarPerHour){
+        Time(double p_dirhamsPerHour){
             originTime = time(NULL);
             // Round up to next hour
             originTime += (86400 - originTime % 86400);
+            dirhamsPerHour = p_dirhamsPerHour;
+        }
+        Time(double p_dirhamsPerHour, const time_t& p_originTime) {
+            originTime = p_originTime + (86400 - p_originTime % 86400);
+            dirhamsPerHour = p_dirhamsPerHour;
         }
         // Function to reserve
         // .. param price to return the price
@@ -209,7 +247,13 @@ namespace Space {
         // Miscellaneous tags
         std::vector<std::string> tags;
     public:
-        Space();
+        Space() {
+            ID = 0;
+            name = "";
+            dims = Dimensions();
+            seats = Seating();
+            timer = Time();
+        };
         Space(unsigned int p_ID,
             std::string p_name,
             const Dimensions& p_dims,
@@ -233,8 +277,10 @@ namespace Space {
             // Use built-in copy constructor
             dims = p_dims;
             seats = p_seats;
+            // Set current time as origin time
             numberOfSupportedPeople = p_numberOfSupportedPeople;
             dirhamsPerHour = p_dirhamsPerHour;
+            timer = Time(p_dirhamsPerHour);
             outdoor = p_outdoor;
             catering = p_catering;
             naturalLight = p_naturalLight;
