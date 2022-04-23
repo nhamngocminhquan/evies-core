@@ -76,7 +76,7 @@ namespace Space {
         // For if the chairs are not cheap plastic
         bool comfy = true;
     public:
-        Seating(){};
+        Seating(){}
         Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false) {
             numberOfSeats = p_numberOfSeats;
             slanted = p_slanted;
@@ -212,12 +212,16 @@ namespace Space {
     private:
         unsigned int ID;
         std::string name;
+    public:
         Dimensions dims;
+    private:
 
         // Event-specific characteristics
         // .. Accomodation
-        unsigned int numberOfSupportedPeople = 0;
+        unsigned int numberOfPeople = 0;
+    public:
         Seating seats;
+    private:
         bool outdoor = false;
         bool catering = false;
 
@@ -233,7 +237,9 @@ namespace Space {
 
         // .. Available times
         double dirhamsPerHour;
+    public:
         Time timer;
+    private:
 
         // For reviews
         // .. Constrained to 0 to 5
@@ -251,12 +257,12 @@ namespace Space {
             dims = Dimensions();
             seats = Seating();
             timer = Time();
-        };
+        }
         Space(unsigned int p_ID,
             std::string p_name,
             const Dimensions& p_dims,
             const Seating& p_seats,
-            unsigned int p_numberOfSupportedPeople,
+            unsigned int p_numberOfPeople,
             double p_dirhamsPerHour,
 
             // Optional
@@ -275,9 +281,9 @@ namespace Space {
             // Use built-in copy constructor
             dims = p_dims;
             seats = p_seats;
-            // Set current time as origin time
-            numberOfSupportedPeople = p_numberOfSupportedPeople;
+            numberOfPeople = p_numberOfPeople;
             dirhamsPerHour = p_dirhamsPerHour;
+            // Set current time as origin time
             timer = Time(p_dirhamsPerHour);
             outdoor = p_outdoor;
             catering = p_catering;
@@ -333,11 +339,19 @@ namespace Space {
         
         // Spaces available in superspace
         std::vector<Space> spaces;
+        
+        // Internal spaces characteristics
+        unsigned long maxNumberOfPeople = 0;
+        // .. Portion of full capacity space can host parking
+        float parkingCapacity = 1.0;
+    public:
+        SuperSpace(){}
+        SuperSpace(unsigned long p_ID, const std::string& p_name, double p_longitude, double p_latitude) {
+            ID = p_ID;
+            name = p_name;
+            longitude = p_longitude;
+            latitude = p_latitude;
+        }
 
-        // For reviews
-        // .. Constrained to 0 to 5
-        // .. .. Less important than individual space reviews
-        float review = 0;
-        bool beenReviewed = false;
     };
 }
