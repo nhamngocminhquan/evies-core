@@ -3,6 +3,7 @@
 #include <string>
 using namespace Space;
 
+// Class Dimensions
 void Dimensions::UpdateAAR() {
     area = length * width;
     // Check for zero before division
@@ -17,6 +18,7 @@ Dimensions::Dimensions() {
     area = 0;
     aspectRatio = 0;
 }
+// Not checking for negative values here (should be on frontend side)
 Dimensions::Dimensions(float p_length, float p_width, float p_height) {
     length = p_length;
     width = p_width;
@@ -39,4 +41,12 @@ void Dimensions::SetDimensions(float p_length, float p_width, float p_height) {
     width = p_width;
     height = p_height;
     UpdateAAR();
+}
+
+// Class Seating
+Seating::Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false) {
+    numberOfSeats = p_numberOfSeats;
+    slanted = p_slanted;
+    surround = p_surround;
+    comfy = p_comfy;
 }
