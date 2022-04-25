@@ -125,6 +125,13 @@ namespace Space {
             originTime = p_originTime + (86400 - p_originTime % 86400);
             dirhamsPerHour = p_dirhamsPerHour;
         }
+        // Setters
+        void SetDirhamsPerHour(double p_dirhamsPerHour) { dirhamsPerHour = p_dirhamsPerHour; }
+        // Getters
+        double GetDirhamsPerHour() { return dirhamsPerHour; }
+        time_t GetOriginTime() { return originTime; }
+        std::vector<unsigned long long> GetTimes() { return times; }
+
         // Function to reserve
         // .. param price to return the price
         bool AddReservation(const time_t& p_startTime, const time_t& p_endTime, double& price) {
@@ -219,6 +226,7 @@ namespace Space {
         // Event-specific characteristics
         // .. Accomodation
         unsigned int numberOfPeople = 0;
+    public:
         Seating seats;
     private:
         bool outdoor = false;
@@ -244,7 +252,7 @@ namespace Space {
         // .. Constrained to 0 to 5
         float score = 0;
         unsigned int numberOfReviews = 0;
-        bool beenReviewed = false;
+        bool reviewed = false;
         std::vector<std::string> reviews;
 
         // Miscellaneous tags
@@ -301,24 +309,15 @@ namespace Space {
         void SetID(unsigned int p_ID) {
             ID = p_ID;
         }
+        void SetNumberOfPeople(int p_numberOfPeople) {
+            numberOfPeople = p_numberOfPeople;
+        }
         void AddReview(const std::string& p_review, float p_score) {
+            reviewed = true;
             reviews.push_back(p_review);
             score = (score * numberOfReviews + p_score) / (++numberOfReviews);
         }
         // Setters using overload
-        bool IsOutdoor() { return outdoor; }
-        bool IsCatering() { return catering; }
-        bool IsNaturalLight() { return naturalLight; }
-        bool IsArtificialLight() { return artificialLight; }
-        bool IsProjector() { return projector; }
-        bool IsSound() { return sound; }
-        bool IsCameras() { return cameras; }
-
-        // Getters
-        std::string GetName() { return name; }
-        unsigned int GetID() { return ID; }
-        float GetReviewScore() { return score; }
-        std::vector<std::string> GetReviews() { return reviews; }
         void IsOutdoor(bool p_outdoor) { outdoor = p_outdoor; }
         void IsCatering(bool p_catering) { catering = p_catering; }
         void IsNaturalLight(bool p_naturalLight) { naturalLight = p_naturalLight; }
@@ -326,6 +325,22 @@ namespace Space {
         void IsProjector(bool p_projector) { projector = p_projector; }
         void IsSound(bool p_sound) { sound = p_sound; }
         void IsCameras(bool p_cameras) { cameras = p_cameras; }
+
+        // Getters
+        std::string GetName() { return name; }
+        unsigned int GetID() { return ID; }
+        int GetNumberOfPeople() { return numberOfPeople; }
+        float GetReviewScore() { return score; }
+        std::vector<std::string> GetReviews() { return reviews; }
+        unsigned int GetNumberOfReviews() { return numberOfReviews; }
+        bool IsOutdoor() { return outdoor; }
+        bool IsCatering() { return catering; }
+        bool IsNaturalLight() { return naturalLight; }
+        bool IsArtificialLight() { return artificialLight; }
+        bool IsProjector() { return projector; }
+        bool IsSound() { return sound; }
+        bool IsCameras() { return cameras; }
+        bool IsReviewed() { return reviewed; }
     };
 
     // Class for groups of spaces in the same location (superspace)
@@ -351,6 +366,5 @@ namespace Space {
             longitude = p_longitude;
             latitude = p_latitude;
         }
-
     };
 }
