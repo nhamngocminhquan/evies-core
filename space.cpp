@@ -2,6 +2,16 @@
 #include <vector>
 #include <ctime>
 #include <cmath>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+
+// JSON library courtesy of:
+// https://github.com/nlohmann/json
+#include "json.hpp"
+namespace nljs = nlohmann;
+// Random hidden file
+#define DATA_FILE ".magical.file"
 
 // Bitwise helpers
 // https://stackoverflow.com/questions/62689/bitwise-indexing-in-c
@@ -25,6 +35,7 @@ namespace Space {
             } else aspectRatio = 0;
         }
     public:
+        // Constructors & destructors
         Dimensions() {
             length = 0;
             width = 0;
@@ -58,11 +69,11 @@ namespace Space {
         }
         
         // Getters
-        float GetLength() { return length; }
-        float GetWidth() { return width; }
-        float GetHeight() { return height; }
-        float GetArea() { return area; }
-        float GetAspectRatio() { return aspectRatio; }
+        float GetLength() const { return length; }
+        float GetWidth() const { return width; }
+        float GetHeight() const { return height; }
+        float GetArea() const { return area; }
+        float GetAspectRatio() const { return aspectRatio; }
     };
 
     // Class for seatings
@@ -76,6 +87,7 @@ namespace Space {
         // For if the chairs are not cheap plastic
         bool comfy = true;
     public:
+        // Constructors & destructors
         Seating(){}
         Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false) {
             numberOfSeats = p_numberOfSeats;
@@ -91,10 +103,10 @@ namespace Space {
         void IsComfy(bool p_comfy) { comfy = p_comfy; }
 
         // Getters
-        bool IsSlanted() { return slanted; }
-        bool IsSurround() { return surround; }
-        bool IsComfy() {return comfy; }
-        unsigned int GetNumberOfSeats() { return numberOfSeats; }
+        bool IsSlanted() const { return slanted; }
+        bool IsSurround() const { return surround; }
+        bool IsComfy() const {return comfy; }
+        unsigned int GetNumberOfSeats() const { return numberOfSeats; }
     };
 
     // Class for available times
@@ -111,6 +123,7 @@ namespace Space {
         // Price per hour
         double dirhamsPerHour = 0;
     public:
+        // Constructors & destructors
         Time() {
             originTime = time(NULL);
             dirhamsPerHour = 0;
@@ -118,19 +131,20 @@ namespace Space {
         Time(double p_dirhamsPerHour){
             originTime = time(NULL);
             // Round up to next hour
-            originTime += (86400 - originTime % 86400);
+            originTime += (3600 - originTime % 3600);
             dirhamsPerHour = p_dirhamsPerHour;
         }
         Time(double p_dirhamsPerHour, const time_t& p_originTime) {
-            originTime = p_originTime + (86400 - p_originTime % 86400);
+            originTime = p_originTime + (3600 - p_originTime % 3600);
             dirhamsPerHour = p_dirhamsPerHour;
         }
         // Setters
         void SetDirhamsPerHour(double p_dirhamsPerHour) { dirhamsPerHour = p_dirhamsPerHour; }
+        void SetBulkTimes(const std::vector<unsigned long long>& p_times) { times = p_times; }
         // Getters
-        double GetDirhamsPerHour() { return dirhamsPerHour; }
-        time_t GetOriginTime() { return originTime; }
-        std::vector<unsigned long long> GetTimes() { return times; }
+        double GetDirhamsPerHour() const { return dirhamsPerHour; }
+        time_t GetOriginTime() const { return originTime; }
+        std::vector<unsigned long long> GetTimes() const { return times; }
 
         // Function to reserve
         // .. param price to return the price
@@ -214,6 +228,43 @@ namespace Space {
         }
     };
 
+    // Class for reviews
+    class Review {
+        // .. Constrained to 0 to 5
+        bool reviewed = false;
+        float score = 0;
+        unsigned int numberOfReviews = 0;
+        std::vector<std::string> reviews;
+    public:
+        // Constructors & destructors
+        Review(float p_score = 0) {
+            score = p_score;
+        }
+        // Setters
+        void AddReview(const std::string& p_review, float p_score) {
+            reviewed = true;
+            reviews.push_back(p_review);
+            score = (score * numberOfReviews + p_score) / (++numberOfReviews);
+        }
+        void SetBulkReviews(int p_score, int p_numberOfReviews, const std::vector<std::string>& p_reviews) {
+            reviews = std::vector<std::string>{};
+            if (p_numberOfReviews == 0) {
+                reviewed = false;
+                score = 0;
+                return;
+            }
+            reviewed = true;
+            score = p_score;
+            reviews = p_reviews;
+        }
+
+        // Getters
+        float GetReviewScore() const { return score; }
+        std::vector<std::string> GetReviews() const { return reviews; }
+        unsigned int GetNumberOfReviews() const { return numberOfReviews; }
+        bool IsReviewed() const { return reviewed; }
+    };
+
     // Class for each discrete space
     class Space {
     private:
@@ -249,27 +300,33 @@ namespace Space {
     private:
 
         // For reviews
-        // .. Constrained to 0 to 5
-        float score = 0;
-        unsigned int numberOfReviews = 0;
-        bool reviewed = false;
-        std::vector<std::string> reviews;
+    public:
+        Review review;
+    private:
 
         // Miscellaneous tags
         std::vector<std::string> tags;
     public:
+        // Constructors & destructors
         Space() {
             ID = 0;
             name = "";
             dims = Dimensions();
             seats = Seating();
             timer = Time();
+            review = Review();
         }
         Space(unsigned int p_ID,
             std::string p_name,
-            const Dimensions& p_dims,
-            const Seating& p_seats,
+
+            // For dimensions
+            float p_length, float p_width, float p_height, 
             unsigned int p_numberOfPeople,
+
+            // For seats
+            unsigned int p_numberOfSeats, bool p_slanted, bool p_surround, bool p_comfy,
+
+            // For timer
             double p_dirhamsPerHour,
 
             // Optional
@@ -279,15 +336,14 @@ namespace Space {
             bool p_artificialLight = true,
             bool p_projector = true,
             bool p_sound = true,
-            bool p_cameras = true,
-            float p_score = 0) {
+            bool p_cameras = true) {
             
             // Manual work
             ID = p_ID;
             name = p_name;
             // Use built-in copy constructor
-            dims = p_dims;
-            seats = p_seats;
+            dims = Dimensions(p_length, p_width, p_height);
+            seats = Seating(p_numberOfSeats, p_slanted, p_surround, p_comfy);
             numberOfPeople = p_numberOfPeople;
             dirhamsPerHour = p_dirhamsPerHour;
             // Set current time as origin time
@@ -299,7 +355,9 @@ namespace Space {
             projector = p_projector;
             sound = p_sound;
             cameras = p_cameras;
-            score = p_score;
+
+            timer = Time(dirhamsPerHour);
+            review = Review();
         }
         
         // Setters
@@ -312,11 +370,6 @@ namespace Space {
         void SetNumberOfPeople(int p_numberOfPeople) {
             numberOfPeople = p_numberOfPeople;
         }
-        void AddReview(const std::string& p_review, float p_score) {
-            reviewed = true;
-            reviews.push_back(p_review);
-            score = (score * numberOfReviews + p_score) / (++numberOfReviews);
-        }
         // Setters using overload
         void IsOutdoor(bool p_outdoor) { outdoor = p_outdoor; }
         void IsCatering(bool p_catering) { catering = p_catering; }
@@ -327,44 +380,189 @@ namespace Space {
         void IsCameras(bool p_cameras) { cameras = p_cameras; }
 
         // Getters
-        std::string GetName() { return name; }
-        unsigned int GetID() { return ID; }
-        int GetNumberOfPeople() { return numberOfPeople; }
-        float GetReviewScore() { return score; }
-        std::vector<std::string> GetReviews() { return reviews; }
-        unsigned int GetNumberOfReviews() { return numberOfReviews; }
-        bool IsOutdoor() { return outdoor; }
-        bool IsCatering() { return catering; }
-        bool IsNaturalLight() { return naturalLight; }
-        bool IsArtificialLight() { return artificialLight; }
-        bool IsProjector() { return projector; }
-        bool IsSound() { return sound; }
-        bool IsCameras() { return cameras; }
-        bool IsReviewed() { return reviewed; }
+        std::string GetName() const { return name; }
+        unsigned int GetID() const { return ID; }
+        int GetNumberOfPeople() const { return numberOfPeople; }
+        bool IsOutdoor() const { return outdoor; }
+        bool IsCatering() const { return catering; }
+        bool IsNaturalLight() const { return naturalLight; }
+        bool IsArtificialLight() const { return artificialLight; }
+        bool IsProjector() const { return projector; }
+        bool IsSound() const { return sound; }
+        bool IsCameras() const { return cameras; }
     };
 
-    // Class for groups of spaces in the same location (superspace)
-    // .. Managed by space-managers
-    class SuperSpace {
-    private:
-        unsigned long ID;
-        std::string name;
-        double latitude, longitude;
-        
-        // Spaces available in superspace
-        std::vector<Space> spaces;
-        
-        // Internal spaces characteristics
-        unsigned long maxNumberOfPeople = 0;
-        // .. Portion of full capacity space can host parking
-        float parkingCapacity = 1.0;
+    // Class to manage spaces
+    // (running backbone of the application)
+    class SpaceManager {
+        std::vector<Space*> spaces;
     public:
-        SuperSpace(){}
-        SuperSpace(unsigned long p_ID, const std::string& p_name, double p_longitude, double p_latitude) {
-            ID = p_ID;
-            name = p_name;
-            longitude = p_longitude;
-            latitude = p_latitude;
+        // Constructors & destructors
+        SpaceManager() {}
+        ~SpaceManager() {
+            for (auto i = spaces.begin(); i != spaces.end(); i++)
+                delete *i;
+        }
+
+        // Storing & reading data
+        bool StoreData(std::string p_fileName = DATA_FILE) {
+            std::ofstream outFile(p_fileName);
+            if (!outFile.is_open())
+                return false;
+            
+            // Wrap try-catch block
+            try {
+                nljs::json jspaces;
+                int i = 0;
+                for (auto space_ptr: spaces) {
+                    nljs::json jdims = {
+                        {"length", space_ptr->dims.GetLength()},
+                        {"width", space_ptr->dims.GetWidth()},
+                        {"height", space_ptr->dims.GetHeight()}
+                    }, jseats = {
+                        {"numberOfSeats", space_ptr->seats.GetNumberOfSeats()},
+                        {"slanted", space_ptr->seats.IsSurround()},
+                        {"surround", space_ptr->seats.IsSlanted()},
+                        {"comfy", space_ptr->seats.IsComfy()}
+                    }, jtimer = {
+                        {"originTime", (unsigned long long)space_ptr->timer.GetOriginTime()},
+                        {"times", nljs::json(space_ptr->timer.GetTimes())},
+                        {"dirhamsPerHour", space_ptr->timer.GetDirhamsPerHour()}
+                    }, jreview = {
+                        {"reviewed", space_ptr->review.IsReviewed()},
+                        {"score", space_ptr->review.GetReviewScore()},
+                        {"numberOfReviews", space_ptr->review.GetNumberOfReviews()},
+                        {"reviews", space_ptr->review.GetReviews()}
+                    }, jspace = {
+                        {"name", space_ptr->GetName()},
+                        {"ID", space_ptr->GetID()},
+                        {"numberOfPeople", space_ptr->GetNumberOfPeople()},
+                        {"outdoor", space_ptr->IsOutdoor()},
+                        {"catering", space_ptr->IsCatering()},
+                        {"naturalLight", space_ptr->IsNaturalLight()},
+                        {"artificialLight", space_ptr->IsArtificialLight()},
+                        {"projector", space_ptr->IsProjector()},
+                        {"sound", space_ptr->IsCameras()},
+                        {"cameras", space_ptr->IsCameras()},
+                        {"dims", jdims},
+                        {"seats", jseats},
+                        {"timer", jtimer},
+                        {"review", jreview}
+                    };
+                    jspaces.push_back(jspace);
+                }
+                // Write to file
+                outFile << std::setw(4) << jspaces << std::endl;
+            } catch (std::exception e) {
+                outFile.close();
+                std::cout << e.what() << std::endl;
+                return false;
+            }
+            // Save data success
+            outFile.close();
+            return true;
+        }
+        bool LoadData(std::string p_fileName = DATA_FILE) {
+            std::ifstream inFile(p_fileName);
+            if (!inFile.is_open())
+                return false;
+            
+            // Wrap try-catch block
+            try {
+                nljs::json jspaces;
+                inFile >> jspaces;
+                // Deallocate
+                for (auto i = spaces.begin(); i != spaces.end(); i++)
+                    delete *i;
+                spaces = std::vector<Space*>{};
+                for (auto jspace: jspaces) {
+                    spaces.push_back(
+                        new Space(
+                            jspace["ID"],
+                            jspace["name"],
+                            jspace["dims"]["length"], jspace["dims"]["width"], jspace["dims"]["height"],
+                            jspace["numberOfPeople"],
+                            jspace["seats"]["numberOfSeats"], jspace["seats"]["slanted"],
+                            jspace["seats"]["surround"], jspace["seats"]["comfy"],
+                            jspace["timer"]["dirhamsPerHour"],
+                            jspace["outdoor"], jspace["catering"],
+                            jspace["naturalLight"], jspace["artificialLight"],
+                            jspace["projector"], jspace["sound"], jspace["cameras"]
+                        )
+                    );
+                    spaces.back()->review.SetBulkReviews(
+                        jspace["review"]["score"], jspace["review"]["numberOfReviews"],
+                        jspace["review"]["reviews"].get<std::vector<std::string>>()
+                    );
+                    spaces.back()->timer = Time(jspace["timer"]["dirhamsPerHour"], jspace["timer"]["originTime"]);
+                    spaces.back()->timer.SetBulkTimes(jspace["timer"]["times"].get<std::vector<unsigned long long>>());
+                }
+            } catch (std::exception e) {
+                inFile.close();
+                std::cout << e.what() << std::endl;
+                return false;
+            }
+            // Load data success
+            inFile.close();
+            return true;
+        }
+
+        // Testing purposes
+        // Generate some random spaces
+        void GetRandomizedSpaces(int n) {
+            spaces = std::vector<Space*>{};
+            std::srand(time(NULL));
+            for (int i = 0; i < n; i++) {
+                const std::string randLocs[] =
+                    {"Building", "Park", "Hall", "Hotel", "Stadium", "Cafe", "Center", "Gallery", "Bar", "Arena"};
+                std::string tmpName = "";
+                for (int j = 0; j < 3; j++)
+                    tmpName.push_back((char)(rand() % 26 + 65));
+                tmpName += " " + randLocs[rand() % 10];
+
+                spaces.push_back(
+                    new Space(
+                        i,                                      // ID
+                        tmpName,                                // name
+
+                                                                // For dimensions
+                        rand() % 90 + 10,                       // length
+                        rand() % 45 + 5,                        // width
+                        rand() % 10 + 2,                        // height
+
+                        rand() % 990 + 10,                      // number of people
+
+                                                                // For seating
+                        rand() % 490 + 10,                      // number of seats
+                        (bool)(rand() % 2),                     // slanted?
+                        (bool)(rand() % 2),                     // surround?
+                        (bool)(rand() % 2),                     // comfy?
+
+                                                                // For timer
+                        rand() % 9900 + 100,                    // price
+
+                        (bool)(rand() % 2),                     // outdoor?
+                        (bool)(rand() % 2),                     // catering?
+                        (bool)(rand() % 2),                     // naturalLight?
+                        (bool)(rand() % 2),                     // artificialLight?
+                        (bool)(rand() % 2),                     // sound?
+                        (bool)(rand() % 2),                     // projector?
+                        (bool)(rand() % 2)                      // camera?
+                    )
+                );
+                spaces.back()->review.AddReview("Very bad, not good", rand() % 5);
+                spaces.back()->review.AddReview("Okay ish", rand() % 5);
+            }
+        }
+        // // Print some details to cmd line
+        void PrintSpaces() {
+            for (auto space: spaces) {
+                std::cout << "ID: " << space->GetID() << "\nName: " << space->GetName() << "\nArea: " << space->dims.GetArea() << " m^2" << std::endl;
+                for (std::string i: space->review.GetReviews()) {
+                    std::cout << i << std::endl;
+                }
+                std::cout << "Review score: " << space->review.GetReviewScore() << std::endl << std::endl;
+            }
         }
     };
 }
