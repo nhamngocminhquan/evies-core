@@ -1,3 +1,6 @@
+#ifndef SPACE_HPP
+#define SPACE_HPP
+
 #include <string>
 #include <vector>
 #include <ctime>
@@ -11,7 +14,7 @@
 #include "json.hpp"
 namespace nljs = nlohmann;
 // Random hidden file
-#define DATA_FILE ".magical.file"
+#define SPACE_FILE ".magical.file"
 
 // Bitwise helpers
 // https://stackoverflow.com/questions/62689/bitwise-indexing-in-c
@@ -88,7 +91,7 @@ namespace Space {
         bool comfy = true;
     public:
         // Constructors & destructors
-        Seating(){}
+        Seating() {}
         Seating(unsigned int p_numberOfSeats, bool p_slanted = false, bool p_surround = false, bool p_comfy = false) {
             numberOfSeats = p_numberOfSeats;
             slanted = p_slanted;
@@ -118,7 +121,7 @@ namespace Space {
         // .. to keep track of allocated time
         // .. Each bit corresponds to 1 hour
         // .. More long longs added based on scheduler
-        // .. 64 bits per each corresponding to 2.67 days
+        // .. 32 bits per each corresponding to 2.67 days
         std::vector<unsigned long long> times;
         // Price per hour
         double dirhamsPerHour = 0;
@@ -135,7 +138,7 @@ namespace Space {
             dirhamsPerHour = p_dirhamsPerHour;
         }
         Time(double p_dirhamsPerHour, const time_t& p_originTime) {
-            originTime = p_originTime + (3600 - p_originTime % 3600);
+            originTime = p_originTime;
             dirhamsPerHour = p_dirhamsPerHour;
         }
         // Setters
@@ -152,51 +155,50 @@ namespace Space {
             // Initialize price
             price = 0;
             // Get hours difference between startTime, endTime and originTime
-            // .. Hour is tracked from beginning o'clock -> floor is used here
+            // .. Hour is tracked (both start & end) from beginning o'clock -> floor is used here
             unsigned long startHours = (unsigned long)std::floor(std::difftime(p_startTime, originTime) / (60 * 60));
             unsigned long endHours = (unsigned long)std::floor(std::difftime(p_endTime, originTime) / (60 * 60));
             // Invalid reservation
-            if (endHours < startHours or startHours < 0) return false;
-            if (times.size() < endHours / 64)
-                while (times.size() <= endHours / 64) times.push_back(0);
+            if (endHours < startHours || startHours < 0) return false;
+            if (times.size() <= endHours / 32)
+                while (times.size() <= endHours / 32) times.push_back(0);
             // Check if any hour in the reservation is booked
-            if (startHours / 64 == endHours / 64) {
-                for (unsigned long i = startHours % 64; i <= endHours % 64; i++) 
-                    if GetBit(times[startHours / 64], i)
+            // std::cout << startHours % 32 << " " << endHours % 32 << " " << times.size() << std::endl;
+            if (startHours / 32 == endHours / 32) {
+                for (unsigned long i = startHours % 32; i <= endHours % 32; i++) 
+                    if GetBit(times[startHours / 32], i)
                         // Time is occupied
                         return false;
             } else {
-                for (unsigned long i = startHours % 64; i < 64; i++) 
-                    if GetBit(times[startHours / 64], i)
+                for (unsigned long i = startHours % 32; i < 32; i++) 
+                    if GetBit(times[startHours / 32], i)
                         // Time is occupied
                         return false;
-                unsigned long j = startHours / 64;
-                while (j != endHours / 64) {
-                    for (unsigned long i = 0; i < 64; i++) 
-                        if GetBit(times[startHours / 64], i)
+                unsigned long j = startHours / 32;
+                while (j != endHours / 32) {
+                    for (unsigned long i = 0; i < 32; i++) 
+                        if GetBit(times[startHours / 32], i)
                             // Time is occupied
                             return false;
                     j++;
                 }
-                for (unsigned long i = 0; i <= endHours % 64; i++) 
-                    if GetBit(times[endHours / 64], i)
+                for (unsigned long i = 0; i <= endHours % 32; i++) 
+                    if GetBit(times[endHours / 32], i)
                         // Time is occupied
                         return false;
             }
             // If not, proceed to select the hours
-            if (startHours / 64 == endHours / 64) {
-                for (unsigned long i = startHours % 64; i <= endHours % 64; i++) 
-                    SetBit(times[startHours / 64], i);
-            } else {
-                for (unsigned long i = startHours % 64; i < 64; i++) 
-                    SetBit(times[startHours / 64], i);
-                unsigned long j = startHours / 64;
-                while (j != endHours / 64) {
-                    times[startHours / 64] = ~0;
-                    j++;
+            if (startHours / 32 == endHours / 32) {
+                for (unsigned long i = startHours % 32; i <= endHours % 32; i++) {
+                    SetBit(times[startHours / 32], i); 
                 }
-                for (unsigned long i = 0; i <= endHours % 64; i++) 
-                    SetBit(times[endHours / 64], i);
+            } else {
+                for (unsigned long i = startHours % 32; i < 32; i++) 
+                    SetBit(times[startHours / 32], i);
+                for (unsigned long i = startHours / 32 + 1; i < endHours / 32; i++)
+                    times[i] = ~0;
+                for (unsigned long i = 0; i <= endHours % 32; i++) 
+                    SetBit(times[endHours / 32], i);
             }
             price = dirhamsPerHour * (endHours - startHours + 1);
         }
@@ -207,23 +209,20 @@ namespace Space {
             unsigned long startHours = (unsigned long)std::floor(std::difftime(p_startTime, originTime) / (60 * 60));
             unsigned long endHours = (unsigned long)std::floor(std::difftime(p_endTime, originTime) / (60 * 60));
             // Invalid reservation
-            if (endHours < startHours or startHours < 0) return false;
-            if (times.size() < endHours / 64)
-                while (times.size() <= endHours / 64) times.push_back(0);
+            if (endHours < startHours || startHours < 0) return false;
+            if (times.size() < endHours / 32)
+                while (times.size() <= endHours / 32) times.push_back(0);
             // Directly clear the hours
-            if (startHours / 64 == endHours / 64) {
-                for (unsigned long i = startHours % 64; i <= endHours % 64; i++) 
-                    ClearBit(times[startHours / 64], i);
+            if (startHours / 32 == endHours / 32) {
+                for (unsigned long i = startHours % 32; i <= endHours % 32; i++) 
+                    ClearBit(times[startHours / 32], i);
             } else {
-                for (unsigned long i = startHours % 64; i < 64; i++) 
-                    ClearBit(times[startHours / 64], i);
-                unsigned long j = startHours / 64;
-                while (j != endHours / 64) {
-                    times[startHours / 64] = 0;
-                    j++;
-                }
-                for (unsigned long i = 0; i <= endHours % 64; i++) 
-                    ClearBit(times[endHours / 64], i);
+                for (unsigned long i = startHours % 32; i < 32; i++) 
+                    ClearBit(times[startHours / 32], i);
+                for (unsigned long i = startHours / 32 + 1; i < endHours / 32; i++)
+                    times[i] = 0;
+                for (unsigned long i = 0; i <= endHours % 32; i++) 
+                    ClearBit(times[endHours / 32], i);
             }
         }
     };
@@ -294,7 +293,6 @@ namespace Space {
         bool cameras = true;
 
         // .. Available times
-        double dirhamsPerHour;
     public:
         Time timer;
     private:
@@ -308,6 +306,7 @@ namespace Space {
         std::vector<std::string> tags;
     public:
         // Constructors & destructors
+        // Constructors don't copy times & reviews
         Space() {
             ID = 0;
             name = "";
@@ -345,7 +344,6 @@ namespace Space {
             dims = Dimensions(p_length, p_width, p_height);
             seats = Seating(p_numberOfSeats, p_slanted, p_surround, p_comfy);
             numberOfPeople = p_numberOfPeople;
-            dirhamsPerHour = p_dirhamsPerHour;
             // Set current time as origin time
             timer = Time(p_dirhamsPerHour);
             outdoor = p_outdoor;
@@ -356,7 +354,29 @@ namespace Space {
             sound = p_sound;
             cameras = p_cameras;
 
-            timer = Time(dirhamsPerHour);
+            review = Review();
+        }
+        // Copy constructor with optional ID
+        Space(const Space& p_space, unsigned int p_ID = -1) {
+            // Manual work
+            if (p_ID != (unsigned int)(-1))
+                ID = p_ID;
+            else ID = p_space.GetID();
+            name = p_space.GetName();
+            // Use built-in copy constructor
+            dims = Dimensions(p_space.dims.GetLength(), p_space.dims.GetWidth(), p_space.dims.GetHeight());
+            seats = Seating(p_space.seats.GetNumberOfSeats(), p_space.seats.IsSlanted(), p_space.seats.IsSurround(), p_space.seats.IsComfy());
+            numberOfPeople = p_space.GetNumberOfPeople();
+            // Set current time as origin time
+            timer = Time(p_space.timer.GetDirhamsPerHour(), p_space.timer.GetOriginTime());
+            outdoor = p_space.IsOutdoor();
+            catering = p_space.IsCatering();
+            naturalLight = p_space.IsNaturalLight();
+            artificialLight = p_space.IsArtificialLight();
+            projector = p_space.IsProjector();
+            sound = p_space.IsSound();
+            cameras = p_space.IsCameras();
+
             review = Review();
         }
         
@@ -390,12 +410,32 @@ namespace Space {
         bool IsProjector() const { return projector; }
         bool IsSound() const { return sound; }
         bool IsCameras() const { return cameras; }
+        // Print some details to cmd line
+        void PrintSpace() const {
+            std::cout << std::endl << "ID: " << ID << "\nName: " << name << "\nArea: " << dims.GetArea() << " m^2" << std::endl;
+            for (std::string i: review.GetReviews()) {
+                std::cout << i << std::endl;
+            }
+            std::cout << "Review score: " << review.GetReviewScore() << std::endl;
+            // Print time courtesy of:
+            // https://stackoverflow.com/questions/997512/string-representation-of-time-t
+            time_t tmp = timer.GetOriginTime();
+            std::cout << "Origin time: " << ctime(&tmp);
+            std::cout << "Price per hour: " << timer.GetDirhamsPerHour() << " Dhs\n";
+            if (timer.GetTimes().size() != 0)
+                for (unsigned long long t: timer.GetTimes()) {
+                    for (int i = 0; i < 32; i++)
+                        std::cout << (GetBit(t, i)? "/": ".");
+                    std::cout << std::endl;
+                }
+        }
     };
 
     // Class to manage spaces
-    // (running backbone of the application)
+    // (running back of the application)
     class SpaceManager {
         std::vector<Space*> spaces;
+        unsigned int emptyID = spaces.size();
     public:
         // Constructors & destructors
         SpaceManager() {}
@@ -404,8 +444,53 @@ namespace Space {
                 delete *i;
         }
 
+        // Interface
+        // Add space (returns ID)
+        unsigned int AddSpace(const Space& p_space) {
+            // Check if full of running spaces
+            bool isFull = false;
+            if (emptyID == spaces.size()) {
+                spaces.push_back(nullptr);
+                isFull = true;
+            }
+            // Create new space at position
+            int ID = emptyID;
+            spaces[emptyID] = new Space(p_space, emptyID);
+
+            // Find next empty space
+            if (isFull) emptyID = spaces.size();
+            else while (emptyID != spaces.size()) {
+                if (spaces[emptyID] == nullptr) break;
+                emptyID++;
+            }
+            return ID;
+        }
+        // Delete space
+        bool DeleteSpace(unsigned int ID) {
+            if (ID >= spaces.size()) return false;
+            if (spaces[ID] != nullptr) {
+                delete spaces[ID];
+                spaces[ID] = nullptr;
+                if (emptyID > ID) emptyID = ID;
+            } 
+            return false;
+        }
+        // Get space
+        Space* GetSpace(unsigned int ID) {
+            if (ID >= spaces.size()) return nullptr;
+            else return spaces[ID];
+        }
+        // Print some details to cmd line
+        void PrintSpaces() {
+            for (auto space_ptr: spaces) {
+                if (space_ptr != nullptr)
+                    space_ptr->PrintSpace();
+            }
+        }
+
+        // Data persistence
         // Storing & reading data
-        bool StoreData(std::string p_fileName = DATA_FILE) {
+        bool StoreData(std::string p_fileName = SPACE_FILE) {
             std::ofstream outFile(p_fileName);
             if (!outFile.is_open())
                 return false;
@@ -415,41 +500,44 @@ namespace Space {
                 nljs::json jspaces;
                 int i = 0;
                 for (auto space_ptr: spaces) {
-                    nljs::json jdims = {
-                        {"length", space_ptr->dims.GetLength()},
-                        {"width", space_ptr->dims.GetWidth()},
-                        {"height", space_ptr->dims.GetHeight()}
-                    }, jseats = {
-                        {"numberOfSeats", space_ptr->seats.GetNumberOfSeats()},
-                        {"slanted", space_ptr->seats.IsSurround()},
-                        {"surround", space_ptr->seats.IsSlanted()},
-                        {"comfy", space_ptr->seats.IsComfy()}
-                    }, jtimer = {
-                        {"originTime", (unsigned long long)space_ptr->timer.GetOriginTime()},
-                        {"times", nljs::json(space_ptr->timer.GetTimes())},
-                        {"dirhamsPerHour", space_ptr->timer.GetDirhamsPerHour()}
-                    }, jreview = {
-                        {"reviewed", space_ptr->review.IsReviewed()},
-                        {"score", space_ptr->review.GetReviewScore()},
-                        {"numberOfReviews", space_ptr->review.GetNumberOfReviews()},
-                        {"reviews", space_ptr->review.GetReviews()}
-                    }, jspace = {
-                        {"name", space_ptr->GetName()},
-                        {"ID", space_ptr->GetID()},
-                        {"numberOfPeople", space_ptr->GetNumberOfPeople()},
-                        {"outdoor", space_ptr->IsOutdoor()},
-                        {"catering", space_ptr->IsCatering()},
-                        {"naturalLight", space_ptr->IsNaturalLight()},
-                        {"artificialLight", space_ptr->IsArtificialLight()},
-                        {"projector", space_ptr->IsProjector()},
-                        {"sound", space_ptr->IsCameras()},
-                        {"cameras", space_ptr->IsCameras()},
-                        {"dims", jdims},
-                        {"seats", jseats},
-                        {"timer", jtimer},
-                        {"review", jreview}
-                    };
-                    jspaces.push_back(jspace);
+                    if (space_ptr == nullptr) jspaces.push_back(nullptr);
+                    else {
+                        nljs::json jdims = {
+                            {"length", space_ptr->dims.GetLength()},
+                            {"width", space_ptr->dims.GetWidth()},
+                            {"height", space_ptr->dims.GetHeight()}
+                        }, jseats = {
+                            {"numberOfSeats", space_ptr->seats.GetNumberOfSeats()},
+                            {"slanted", space_ptr->seats.IsSurround()},
+                            {"surround", space_ptr->seats.IsSlanted()},
+                            {"comfy", space_ptr->seats.IsComfy()}
+                        }, jtimer = {
+                            {"originTime", (unsigned long long)space_ptr->timer.GetOriginTime()},
+                            {"times", nljs::json(space_ptr->timer.GetTimes())},
+                            {"dirhamsPerHour", space_ptr->timer.GetDirhamsPerHour()}
+                        }, jreview = {
+                            {"reviewed", space_ptr->review.IsReviewed()},
+                            {"score", space_ptr->review.GetReviewScore()},
+                            {"numberOfReviews", space_ptr->review.GetNumberOfReviews()},
+                            {"reviews", space_ptr->review.GetReviews()}
+                        }, jspace = {
+                            {"name", space_ptr->GetName()},
+                            {"ID", space_ptr->GetID()},
+                            {"numberOfPeople", space_ptr->GetNumberOfPeople()},
+                            {"outdoor", space_ptr->IsOutdoor()},
+                            {"catering", space_ptr->IsCatering()},
+                            {"naturalLight", space_ptr->IsNaturalLight()},
+                            {"artificialLight", space_ptr->IsArtificialLight()},
+                            {"projector", space_ptr->IsProjector()},
+                            {"sound", space_ptr->IsCameras()},
+                            {"cameras", space_ptr->IsCameras()},
+                            {"dims", jdims},
+                            {"seats", jseats},
+                            {"timer", jtimer},
+                            {"review", jreview}
+                        };
+                        jspaces.push_back(jspace);
+                    }
                 }
                 // Write to file
                 outFile << std::setw(4) << jspaces << std::endl;
@@ -462,7 +550,7 @@ namespace Space {
             outFile.close();
             return true;
         }
-        bool LoadData(std::string p_fileName = DATA_FILE) {
+        bool LoadData(std::string p_fileName = SPACE_FILE) {
             std::ifstream inFile(p_fileName);
             if (!inFile.is_open())
                 return false;
@@ -475,28 +563,38 @@ namespace Space {
                 for (auto i = spaces.begin(); i != spaces.end(); i++)
                     delete *i;
                 spaces = std::vector<Space*>{};
+                bool isFull = true;
                 for (auto jspace: jspaces) {
-                    spaces.push_back(
-                        new Space(
-                            jspace["ID"],
-                            jspace["name"],
-                            jspace["dims"]["length"], jspace["dims"]["width"], jspace["dims"]["height"],
-                            jspace["numberOfPeople"],
-                            jspace["seats"]["numberOfSeats"], jspace["seats"]["slanted"],
-                            jspace["seats"]["surround"], jspace["seats"]["comfy"],
-                            jspace["timer"]["dirhamsPerHour"],
-                            jspace["outdoor"], jspace["catering"],
-                            jspace["naturalLight"], jspace["artificialLight"],
-                            jspace["projector"], jspace["sound"], jspace["cameras"]
-                        )
-                    );
-                    spaces.back()->review.SetBulkReviews(
-                        jspace["review"]["score"], jspace["review"]["numberOfReviews"],
-                        jspace["review"]["reviews"].get<std::vector<std::string>>()
-                    );
-                    spaces.back()->timer = Time(jspace["timer"]["dirhamsPerHour"], jspace["timer"]["originTime"]);
-                    spaces.back()->timer.SetBulkTimes(jspace["timer"]["times"].get<std::vector<unsigned long long>>());
+                    if (jspace == nullptr) {
+                        if (isFull) {
+                            isFull = false;
+                            emptyID = spaces.size();
+                        }
+                        spaces.push_back(nullptr);
+                    } else {
+                        spaces.push_back(
+                            new Space(
+                                jspace["ID"],
+                                jspace["name"],
+                                jspace["dims"]["length"], jspace["dims"]["width"], jspace["dims"]["height"],
+                                jspace["numberOfPeople"],
+                                jspace["seats"]["numberOfSeats"], jspace["seats"]["slanted"],
+                                jspace["seats"]["surround"], jspace["seats"]["comfy"],
+                                jspace["timer"]["dirhamsPerHour"],
+                                jspace["outdoor"], jspace["catering"],
+                                jspace["naturalLight"], jspace["artificialLight"],
+                                jspace["projector"], jspace["sound"], jspace["cameras"]
+                            )
+                        );
+                        spaces.back()->review.SetBulkReviews(
+                            jspace["review"]["score"], jspace["review"]["numberOfReviews"],
+                            jspace["review"]["reviews"].get<std::vector<std::string>>()
+                        );
+                        spaces.back()->timer = Time(jspace["timer"]["dirhamsPerHour"], jspace["timer"]["originTime"]);
+                        spaces.back()->timer.SetBulkTimes(jspace["timer"]["times"].get<std::vector<unsigned long long>>());
+                    }
                 }
+                if (isFull) emptyID = spaces.size();
             } catch (std::exception e) {
                 inFile.close();
                 std::cout << e.what() << std::endl;
@@ -507,7 +605,7 @@ namespace Space {
             return true;
         }
 
-        // Testing purposes
+        // Testing
         // Generate some random spaces
         void GetRandomizedSpaces(int n) {
             spaces = std::vector<Space*>{};
@@ -553,16 +651,9 @@ namespace Space {
                 spaces.back()->review.AddReview("Very bad, not good", rand() % 5);
                 spaces.back()->review.AddReview("Okay ish", rand() % 5);
             }
-        }
-        // // Print some details to cmd line
-        void PrintSpaces() {
-            for (auto space: spaces) {
-                std::cout << "ID: " << space->GetID() << "\nName: " << space->GetName() << "\nArea: " << space->dims.GetArea() << " m^2" << std::endl;
-                for (std::string i: space->review.GetReviews()) {
-                    std::cout << i << std::endl;
-                }
-                std::cout << "Review score: " << space->review.GetReviewScore() << std::endl << std::endl;
-            }
+            emptyID = spaces.size();
         }
     };
 }
+
+#endif
