@@ -1,0 +1,55 @@
+[
+    {
+        "ID": 0,
+        "name": "Quan",
+        "role": "spaceUser",
+        "spaceIDs": [
+            5,
+            6
+        ]
+    },
+    {
+        "ID": 1,
+        "RSVPs": [
+            [
+                5,
+                [
+                    1652587200,
+                    1652652000
+                ]
+            ]
+        ],
+        "name": "Maroon 5",
+        "outstandingBalance": 76212.0,
+        "role": "eventUser"
+    },
+    {
+        "ID": 2,
+        "RSVPs": [
+            [
+                5,
+                [
+                    1652284800,
+                    1652306400
+                ]
+            ],
+            [
+                5,
+                [
+                    1652461200,
+                    1652482800
+                ]
+            ],
+            [
+                6,
+                [
+                    1652587200,
+                    1652774400
+                ]
+            ]
+        ],
+        "name": "party man",
+        "outstandingBalance": 270300.0,
+        "role": "eventUser"
+    }
+]

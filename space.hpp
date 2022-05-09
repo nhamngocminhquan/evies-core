@@ -14,7 +14,7 @@
 #include "json.hpp"
 namespace nljs = nlohmann;
 // Random hidden file
-#define SPACE_FILE ".magical.file"
+#define SPACE_FILE "magical.file"
 
 // Bitwise helpers
 // https://stackoverflow.com/questions/62689/bitwise-indexing-in-c
@@ -163,7 +163,6 @@ namespace Space {
             if (times.size() <= endHours / 32)
                 while (times.size() <= endHours / 32) times.push_back(0);
             // Check if any hour in the reservation is booked
-            // std::cout << startHours % 32 << " " << endHours % 32 << " " << times.size() << std::endl;
             if (startHours / 32 == endHours / 32) {
                 for (unsigned long i = startHours % 32; i <= endHours % 32; i++) 
                     if GetBit(times[startHours / 32], i)
@@ -201,6 +200,7 @@ namespace Space {
                     SetBit(times[endHours / 32], i);
             }
             price = dirhamsPerHour * (endHours - startHours + 1);
+            return true;
         }
         // Function to remove reservations
         bool RemoveReservation(const time_t& p_startTime, const time_t& p_endTime) {
@@ -224,6 +224,7 @@ namespace Space {
                 for (unsigned long i = 0; i <= endHours % 32; i++) 
                     ClearBit(times[endHours / 32], i);
             }
+            return true;
         }
     };
 
@@ -255,6 +256,7 @@ namespace Space {
             reviewed = true;
             score = p_score;
             reviews = p_reviews;
+            numberOfReviews = p_numberOfReviews;
         }
 
         // Getters
@@ -410,24 +412,94 @@ namespace Space {
         bool IsProjector() const { return projector; }
         bool IsSound() const { return sound; }
         bool IsCameras() const { return cameras; }
+
+        // Utility
         // Print some details to cmd line
-        void PrintSpace() const {
-            std::cout << std::endl << "ID: " << ID << "\nName: " << name << "\nArea: " << dims.GetArea() << " m^2" << std::endl;
-            for (std::string i: review.GetReviews()) {
-                std::cout << i << std::endl;
+        inline void PrintSpace(bool withReviews = true, bool withTimes = true,
+            bool withDetails = true) const {
+            std::cout << "ID: " << ID
+                      << "\nName: " << name
+                      << "\nArea: " << dims.GetArea() << " m^2 -- "
+                      << "Aspect ratio: " << dims.GetAspectRatio()
+                      << std::endl;
+            if (withDetails) {
+                std::cout << "Supports " << numberOfPeople << " people\n";
+                std::string tmp_string = "";
+                std::vector<std::string> details;
+                if (outdoor) details.push_back("outdoors atmosphere");
+                if (naturalLight) details.push_back("natural daylight");
+                if (artificialLight) details.push_back("lighting at night");
+                if (catering) details.push_back("food & drinks");
+                if (projector) details.push_back("projectors");
+                if (sound) details.push_back("sound system");
+                if (cameras) details.push_back("cameras available");
+                if (details.size() == 1) std::cout << "Has " << details[0] << std::endl;
+                else if (details.size() == 2) std::cout << "Has " << details[0] << " & " << details[1] << std::endl;
+                else if (details.size() >= 3) {
+                    std::cout << "Has ";
+                    for (int i = 0; i < details.size() - 1; i++)
+                        std::cout << details[i] << ", ";
+                    std::cout << "and also " << details[details.size() - 1] << std::endl;
+                } 
             }
-            std::cout << "Review score: " << review.GetReviewScore() << std::endl;
+            if (withReviews) {
+                std::cout << "Reviews:";
+                if (review.GetNumberOfReviews() != 0) {
+                    std::cout << std::endl;
+                    for (std::string i: review.GetReviews()) {
+                        std::cout << "   -- " << i << std::endl;
+                    }
+                    std::cout << "Review score: " << review.GetReviewScore() << std::endl;
+                } else std::cout << " None\n";
+            }
             // Print time courtesy of:
             // https://stackoverflow.com/questions/997512/string-representation-of-time-t
-            time_t tmp = timer.GetOriginTime();
-            std::cout << "Origin time: " << ctime(&tmp);
-            std::cout << "Price per hour: " << timer.GetDirhamsPerHour() << " Dhs\n";
-            if (timer.GetTimes().size() != 0)
-                for (unsigned long long t: timer.GetTimes()) {
-                    for (int i = 0; i < 32; i++)
-                        std::cout << (GetBit(t, i)? "/": ".");
+            if (withTimes) {
+                time_t tmp_time = timer.GetOriginTime();
+                std::cout << "Space opened on: " << ctime(&tmp_time);
+                std::cout << "Price per hour: " << timer.GetDirhamsPerHour() << " Dhs\n";
+                std::cout << "Timetable:";
+                if (timer.GetTimes().size() != 0) {
                     std::cout << std::endl;
-                }
+                    tmp_time = timer.GetOriginTime();
+                    tm* tmp_tm = localtime(&tmp_time);
+                    std::string tmp_string;
+                    int hourCounter = tmp_tm->tm_hour;
+                    unsigned int timeCounter = 0;
+                    unsigned int bitCounter = 0;
+
+                    // Initial day
+                    tmp_string = std::string(ctime(&tmp_time));
+                    tmp_string.erase(11, 8);
+                    tmp_string.erase(tmp_string.length() - 1);
+                    std::cout << std::endl << "  -- " << tmp_string + " ";
+                    for (int i = 0; i < hourCounter; i++)
+                        std::cout << " ";
+
+                    // Loop through the vector of times
+                    while (timeCounter != timer.GetTimes().size()) {
+                        while (bitCounter != 32) {
+                            if (hourCounter == 24) {
+                                hourCounter = 0;
+                                tmp_tm = localtime(&tmp_time);
+                                tmp_tm->tm_mday++;
+                                tmp_time = mktime(tmp_tm);
+                                tmp_string = std::string(ctime(&tmp_time));
+                                tmp_string.erase(11, 8);
+                                tmp_string.erase(tmp_string.length() - 1);
+                                std::cout << std::endl << "  -- " << tmp_string + " ";
+                            }
+                            std::cout <<
+                                (GetBit(timer.GetTimes()[timeCounter], bitCounter)? "/": ".");
+                            bitCounter++;
+                            hourCounter++;
+                        }
+                        bitCounter = 0;
+                        timeCounter++;
+                    }
+                    std::cout << std::endl;
+                } else std::cout << " Not booked yet\n";
+            }
         }
     };
 
@@ -444,8 +516,11 @@ namespace Space {
                 delete *i;
         }
 
+        // Getters
+        unsigned int GetEmptyID() const { return emptyID; }
+
         // Interface
-        // Add space (returns ID)
+        // Add space via reference (returns ID)
         unsigned int AddSpace(const Space& p_space) {
             // Check if full of running spaces
             bool isFull = false;
@@ -456,6 +531,26 @@ namespace Space {
             // Create new space at position
             int ID = emptyID;
             spaces[emptyID] = new Space(p_space, emptyID);
+
+            // Find next empty space
+            if (isFull) emptyID = spaces.size();
+            else while (emptyID != spaces.size()) {
+                if (spaces[emptyID] == nullptr) break;
+                emptyID++;
+            }
+            return ID;
+        }
+        // Add space via pointer (returns ID)
+        unsigned int AddSpace(Space* p_space_ptr) {
+            // Check if full of running spaces
+            bool isFull = false;
+            if (emptyID == spaces.size()) {
+                spaces.push_back(nullptr);
+                isFull = true;
+            }
+            // Create new space at position
+            int ID = emptyID;
+            spaces[emptyID] = p_space_ptr;
 
             // Find next empty space
             if (isFull) emptyID = spaces.size();
@@ -481,11 +576,14 @@ namespace Space {
             else return spaces[ID];
         }
         // Print some details to cmd line
-        void PrintSpaces() {
-            for (auto space_ptr: spaces) {
-                if (space_ptr != nullptr)
-                    space_ptr->PrintSpace();
-            }
+        inline void PrintSpaces(bool withReviews = true, bool withTimes = true,
+            bool withDetails = true) {
+            for (auto space_ptr: spaces)
+                if (space_ptr != nullptr) {
+                    std::cout << std::endl;
+                    space_ptr->PrintSpace(withReviews, withTimes, withDetails);
+                }
+            if (spaces.size() == 0) std::cout << "No spaces yet!\n";
         }
 
         // Data persistence
@@ -498,7 +596,6 @@ namespace Space {
             // Wrap try-catch block
             try {
                 nljs::json jspaces;
-                int i = 0;
                 for (auto space_ptr: spaces) {
                     if (space_ptr == nullptr) jspaces.push_back(nullptr);
                     else {
@@ -576,7 +673,9 @@ namespace Space {
                             new Space(
                                 jspace["ID"],
                                 jspace["name"],
-                                jspace["dims"]["length"], jspace["dims"]["width"], jspace["dims"]["height"],
+                                jspace["dims"]["length"].get<nljs::json::number_float_t>(),
+                                jspace["dims"]["width"].get<nljs::json::number_float_t>(),
+                                jspace["dims"]["height"].get<nljs::json::number_float_t>(),
                                 jspace["numberOfPeople"],
                                 jspace["seats"]["numberOfSeats"], jspace["seats"]["slanted"],
                                 jspace["seats"]["surround"], jspace["seats"]["comfy"],
@@ -587,7 +686,8 @@ namespace Space {
                             )
                         );
                         spaces.back()->review.SetBulkReviews(
-                            jspace["review"]["score"], jspace["review"]["numberOfReviews"],
+                            jspace["review"]["score"].get<nljs::json::number_float_t>(),
+                            jspace["review"]["numberOfReviews"],
                             jspace["review"]["reviews"].get<std::vector<std::string>>()
                         );
                         spaces.back()->timer = Time(jspace["timer"]["dirhamsPerHour"], jspace["timer"]["originTime"]);
@@ -605,22 +705,30 @@ namespace Space {
             return true;
         }
 
-        // Testing
+        // Utility
         // Generate some random spaces
-        void GetRandomizedSpaces(int n) {
-            spaces = std::vector<Space*>{};
+        void GetRandomizedSpaces(int n, std::string p_name = "") {
+            // spaces = std::vector<Space*>{};
             std::srand(time(NULL));
+            unsigned int returnID;
             for (int i = 0; i < n; i++) {
-                const std::string randLocs[] =
-                    {"Building", "Park", "Hall", "Hotel", "Stadium", "Cafe", "Center", "Gallery", "Bar", "Arena"};
+                // Check if name is supplied
                 std::string tmpName = "";
-                for (int j = 0; j < 3; j++)
-                    tmpName.push_back((char)(rand() % 26 + 65));
-                tmpName += " " + randLocs[rand() % 10];
-
-                spaces.push_back(
+                if (p_name != "") tmpName = p_name;
+                // Randomize name
+                else {
+                    const std::string randLocs[] =
+                        {"Building", "Park", "Hall", "Hotel", "Stadium", "Cafe", "Center", "Gallery", "Bar", "Arena"};
+                    for (int j = 0; j < 3; j++)
+                        tmpName.push_back((char)(rand() % 26 + 65));
+                    tmpName += " " + randLocs[rand() % 10];
+                }
+                
+                // Create space
+                unsigned int newID = emptyID;
+                AddSpace(
                     new Space(
-                        i,                                      // ID
+                        newID,                                  // ID
                         tmpName,                                // name
 
                                                                 // For dimensions
@@ -643,15 +751,30 @@ namespace Space {
                         (bool)(rand() % 2),                     // catering?
                         (bool)(rand() % 2),                     // naturalLight?
                         (bool)(rand() % 2),                     // artificialLight?
-                        (bool)(rand() % 2),                     // sound?
                         (bool)(rand() % 2),                     // projector?
+                        (bool)(rand() % 2),                     // sound?
                         (bool)(rand() % 2)                      // camera?
                     )
                 );
-                spaces.back()->review.AddReview("Very bad, not good", rand() % 5);
-                spaces.back()->review.AddReview("Okay ish", rand() % 5);
+
+                // Add bogus reviews
+                const std::string randRevs[] = {
+                    "Very bad, not good",
+                    "Okay ish",
+                    "Food is perfect! drinks are okay",
+                    "Cozy atmosphere",
+                    "Horrible reception n wifi",
+                    "perfect for game night !!",
+                    "Very fresh & spacious! Worth the price",
+                    "Too far from the city",
+                    "need more trashbins",
+                    "Good sound system & cameras"
+                };
+                int numOfReviews = rand() % 3 + 1;
+                for (int j = 0; j < numOfReviews; j++)
+                    spaces[newID]->review.AddReview(randRevs[rand() % 10], rand() % 6);
+                
             }
-            emptyID = spaces.size();
         }
     };
 }

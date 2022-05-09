@@ -1,0 +1,348 @@
+[
+    {
+        "ID": 0,
+        "artificialLight": true,
+        "cameras": false,
+        "catering": true,
+        "dims": {
+            "height": 3.0,
+            "length": 79.0,
+            "width": 46.0
+        },
+        "name": "BHP Park",
+        "naturalLight": true,
+        "numberOfPeople": 335,
+        "outdoor": true,
+        "projector": false,
+        "review": {
+            "numberOfReviews": 1,
+            "reviewed": true,
+            "reviews": [
+                "Good sound system & cameras"
+            ],
+            "score": 5.0
+        },
+        "seats": {
+            "comfy": true,
+            "numberOfSeats": 354,
+            "slanted": false,
+            "surround": true
+        },
+        "sound": false,
+        "timer": {
+            "dirhamsPerHour": 3610.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 1,
+        "artificialLight": false,
+        "cameras": true,
+        "catering": true,
+        "dims": {
+            "height": 11.0,
+            "length": 33.0,
+            "width": 29.0
+        },
+        "name": "QKA Arena",
+        "naturalLight": true,
+        "numberOfPeople": 831,
+        "outdoor": false,
+        "projector": true,
+        "review": {
+            "numberOfReviews": 3,
+            "reviewed": true,
+            "reviews": [
+                "Horrible reception n wifi",
+                "Food is perfect! drinks are okay",
+                "Good sound system & cameras"
+            ],
+            "score": 3.0
+        },
+        "seats": {
+            "comfy": true,
+            "numberOfSeats": 444,
+            "slanted": true,
+            "surround": false
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 246.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 2,
+        "artificialLight": false,
+        "cameras": true,
+        "catering": true,
+        "dims": {
+            "height": 2.0,
+            "length": 97.0,
+            "width": 39.0
+        },
+        "name": "MBU Center",
+        "naturalLight": false,
+        "numberOfPeople": 128,
+        "outdoor": false,
+        "projector": true,
+        "review": {
+            "numberOfReviews": 2,
+            "reviewed": true,
+            "reviews": [
+                "Good sound system & cameras",
+                "Very fresh & spacious! Worth the price"
+            ],
+            "score": 2.0
+        },
+        "seats": {
+            "comfy": true,
+            "numberOfSeats": 90,
+            "slanted": true,
+            "surround": true
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 3735.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 3,
+        "artificialLight": true,
+        "cameras": true,
+        "catering": true,
+        "dims": {
+            "height": 7.0,
+            "length": 65.0,
+            "width": 30.0
+        },
+        "name": "CSF Bar",
+        "naturalLight": false,
+        "numberOfPeople": 870,
+        "outdoor": true,
+        "projector": false,
+        "review": {
+            "numberOfReviews": 2,
+            "reviewed": true,
+            "reviews": [
+                "Very bad, not good",
+                "Good sound system & cameras"
+            ],
+            "score": 4.0
+        },
+        "seats": {
+            "comfy": true,
+            "numberOfSeats": 172,
+            "slanted": true,
+            "surround": true
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 713.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 4,
+        "artificialLight": true,
+        "cameras": false,
+        "catering": true,
+        "dims": {
+            "height": 7.0,
+            "length": 67.0,
+            "width": 40.0
+        },
+        "name": "PLE Arena",
+        "naturalLight": false,
+        "numberOfPeople": 193,
+        "outdoor": true,
+        "projector": false,
+        "review": {
+            "numberOfReviews": 1,
+            "reviewed": true,
+            "reviews": [
+                "Cozy atmosphere"
+            ],
+            "score": 3.0
+        },
+        "seats": {
+            "comfy": false,
+            "numberOfSeats": 462,
+            "slanted": false,
+            "surround": true
+        },
+        "sound": false,
+        "timer": {
+            "dirhamsPerHour": 2311.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 5,
+        "artificialLight": false,
+        "cameras": true,
+        "catering": false,
+        "dims": {
+            "height": 4.0,
+            "length": 49.0,
+            "width": 35.0
+        },
+        "name": "SpaceX",
+        "naturalLight": true,
+        "numberOfPeople": 264,
+        "outdoor": false,
+        "projector": true,
+        "review": {
+            "numberOfReviews": 2,
+            "reviewed": true,
+            "reviews": [
+                "need more trashbins",
+                "Wonderful area! Lovely evening for party man"
+            ],
+            "score": 3.0
+        },
+        "seats": {
+            "comfy": false,
+            "numberOfSeats": 397,
+            "slanted": true,
+            "surround": false
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 4234.0,
+            "originTime": 1652115600,
+            "times": [
+                0,
+                2064384,
+                0,
+                63,
+                2097144
+            ]
+        }
+    },
+    {
+        "ID": 6,
+        "artificialLight": true,
+        "cameras": false,
+        "catering": false,
+        "dims": {
+            "height": 3.0,
+            "length": 78.0,
+            "width": 16.0
+        },
+        "name": "SpaceY",
+        "naturalLight": true,
+        "numberOfPeople": 686,
+        "outdoor": false,
+        "projector": false,
+        "review": {
+            "numberOfReviews": 3,
+            "reviewed": true,
+            "reviews": [
+                "Food is perfect! drinks are okay",
+                "perfect for game night !!",
+                "Okay ish"
+            ],
+            "score": 0.0
+        },
+        "seats": {
+            "comfy": false,
+            "numberOfSeats": 287,
+            "slanted": false,
+            "surround": false
+        },
+        "sound": false,
+        "timer": {
+            "dirhamsPerHour": 4221.0,
+            "originTime": 1652115600,
+            "times": [
+                0,
+                0,
+                0,
+                0,
+                18446744073709551608,
+                8388607
+            ]
+        }
+    },
+    {
+        "ID": 7,
+        "artificialLight": true,
+        "cameras": true,
+        "catering": true,
+        "dims": {
+            "height": 4.0,
+            "length": 34.0,
+            "width": 29.0
+        },
+        "name": "PUQ Gallery",
+        "naturalLight": true,
+        "numberOfPeople": 672,
+        "outdoor": true,
+        "projector": false,
+        "review": {
+            "numberOfReviews": 3,
+            "reviewed": true,
+            "reviews": [
+                "Very bad, not good",
+                "Cozy atmosphere",
+                "Very bad, not good"
+            ],
+            "score": 4.0
+        },
+        "seats": {
+            "comfy": false,
+            "numberOfSeats": 210,
+            "slanted": true,
+            "surround": false
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 5928.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    },
+    {
+        "ID": 8,
+        "artificialLight": false,
+        "cameras": true,
+        "catering": false,
+        "dims": {
+            "height": 4.0,
+            "length": 63.0,
+            "width": 34.0
+        },
+        "name": "NJQ Center",
+        "naturalLight": true,
+        "numberOfPeople": 732,
+        "outdoor": false,
+        "projector": true,
+        "review": {
+            "numberOfReviews": 1,
+            "reviewed": true,
+            "reviews": [
+                "Cozy atmosphere"
+            ],
+            "score": 2.0
+        },
+        "seats": {
+            "comfy": false,
+            "numberOfSeats": 23,
+            "slanted": true,
+            "surround": false
+        },
+        "sound": true,
+        "timer": {
+            "dirhamsPerHour": 7267.0,
+            "originTime": 1652115600,
+            "times": []
+        }
+    }
+]
