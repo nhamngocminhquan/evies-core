@@ -100,6 +100,15 @@ namespace User {
         }
 
         // Utility
+        // Clean reservations function: remove reservations with invalid spaces
+        inline void CleanReservations() {
+            int i = RSVPs.size() - 1;
+            while (i >= 0) {
+                if (spaceManager->GetSpace(RSVPs[i].first) == nullptr)
+                    RSVPs.erase(RSVPs.begin() + i);
+                i--;
+            }
+        }
         // Print reservations function
         inline void PrintReservation(unsigned int ID) {
             std::cout << "\nReservation #" << ID << ":\n";
@@ -109,13 +118,14 @@ namespace User {
                       << ctime(&RSVPs[ID].second.second);
         }
         inline void PrintReservations() {
+            CleanReservations();
             if (RSVPs.size() > 0) {
                 for (unsigned int i = 0; i < RSVPs.size(); i++) {
                     std::cout << std::endl;
                     PrintReservation(i);
                 }
             } else {
-                std::cout << "You have no reservations yet\n";
+                std::cout << " You have no reservations yet\n";
             }
         }
         // Print function
@@ -132,6 +142,7 @@ namespace User {
             std::string choice;
             bool isRunning = true;
             while (isRunning) {
+                CleanReservations();
                 std::cout << "\nWhat would you like to do?\n";
                 std::cout << " 1. Browse spaces\n";
                 std::cout << " 2. Add or remove reservations\n";
@@ -259,6 +270,7 @@ namespace User {
         }
         // Serialize function
         nljs::json Serialize() {
+            CleanReservations();
             nljs::json juser = {
                 {"ID", ID},
                 {"name", name},
@@ -296,7 +308,7 @@ namespace User {
                     spaceManager->GetSpace(spaceIDs[i])->PrintSpace();
                 }
             } else {
-                std::cout << "You have no spaces yet\n";
+                std::cout << " You have no spaces yet\n";
             }
         }
         // Print function
@@ -305,9 +317,10 @@ namespace User {
                       << "\nName: " << name
                       << "\nRole: Space manager"
                       << "\nManage space IDs: ";
-                for (int i = 0; i < spaceIDs.size(); i++)
-                      std::cout << spaceIDs[i] << " ";
-                      std::cout << std::endl;
+            for (int i = 0; i < spaceIDs.size(); i++)
+                std::cout << spaceIDs[i] << " ";
+            if (spaceIDs.size() == 0) std::cout << "You have no spaces yet\n";
+            std::cout << std::endl;
         }
         // Actions function
         void Actions() {
@@ -586,13 +599,18 @@ namespace User {
                         case '4': {
                             choice = GetInput("\nWould you like to store (1) or load (2) data? (1/2): ");
                             if (choice[0] == '1') {
-                                if (spaceManager->StoreData() && StoreData())
-                                    std::cout << "Data stored successfully!\n";
-                                else std::cout << "Store data failed!\nRecommend program restart\n";
+                                if (spaceManager->StoreData())
+                                    if (StoreData()) {
+                                        std::cout << "Data stored successfully!\n";
+                                        break;
+                                    }
+                                std::cout << "Store data failed!\nRecommend program restart\n";
                             } else if (choice[0] == '2') {
-                                if (spaceManager->LoadData() && LoadData())
-                                    std::cout << "Data loaded successfully!\n";
-                                else std::cout << "Load data failed!\nRecommend program restart\n";
+                                if (spaceManager->LoadData())
+                                    if  (LoadData())
+                                        std::cout << "Data loaded successfully!\n";
+                                        break;
+                                std::cout << "Load data failed!\nRecommend program restart\n";
                             } else std::cout << "Invalid input" << std::endl;
                             break;
                         }

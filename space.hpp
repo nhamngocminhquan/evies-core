@@ -16,7 +16,7 @@ namespace nljs = nlohmann;
 // Random hidden file
 #define SPACE_FILE "magical.file"
 
-// Bitwise helpers
+// Bitwise helpers courtesy of:
 // https://stackoverflow.com/questions/62689/bitwise-indexing-in-c
 #define GetBit(var, bit) ((var & (1 << bit)) != 0) // Returns true / false if bit is set
 #define SetBit(var, bit) (var |= (1 << bit))
