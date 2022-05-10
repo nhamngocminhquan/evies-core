@@ -501,6 +501,74 @@ namespace Space {
                 } else std::cout << " Not booked yet\n";
             }
         }
+        // Serialize function
+        nljs::json Serialize() {
+            nljs::json jdims = {
+                {"length", dims.GetLength()},
+                {"width", dims.GetWidth()},
+                {"height", dims.GetHeight()}
+            }, jseats = {
+                {"numberOfSeats", seats.GetNumberOfSeats()},
+                {"slanted", seats.IsSurround()},
+                {"surround", seats.IsSlanted()},
+                {"comfy", seats.IsComfy()}
+            }, jtimer = {
+                {"originTime", (unsigned long long)timer.GetOriginTime()},
+                {"times", timer.GetTimes()},
+                {"dirhamsPerHour", timer.GetDirhamsPerHour()}
+            }, jreview = {
+                {"reviewed", review.IsReviewed()},
+                {"score", review.GetReviewScore()},
+                {"numberOfReviews", review.GetNumberOfReviews()},
+                {"reviews", review.GetReviews()}
+            }, jspace = {
+                {"name", name},
+                {"ID", ID},
+                {"numberOfPeople", numberOfPeople},
+                {"outdoor", outdoor},
+                {"catering", catering},
+                {"naturalLight", naturalLight},
+                {"artificialLight", artificialLight},
+                {"projector", projector},
+                {"sound", sound},
+                {"cameras", cameras},
+                {"dims", jdims},
+                {"seats", jseats},
+                {"timer", jtimer},
+                {"review", jreview}
+            };
+            return jspace;
+        }
+        // Deserialize function
+        void Deserialize(const nljs::json& p_jspace) {
+            ID = p_jspace["ID"];
+            name = p_jspace["name"];
+            dims = Dimensions(
+                p_jspace["dims"]["length"].get<nljs::json::number_float_t>(),
+                p_jspace["dims"]["width"].get<nljs::json::number_float_t>(),
+                p_jspace["dims"]["height"].get<nljs::json::number_float_t>()
+            );
+            numberOfPeople = p_jspace["numberOfPeople"];
+            seats = Seating(
+                p_jspace["seats"]["numberOfSeats"], p_jspace["seats"]["slanted"],
+                p_jspace["seats"]["surround"], p_jspace["seats"]["comfy"]
+            );
+            outdoor = p_jspace["outdoor"];
+            catering = p_jspace["catering"];
+            naturalLight = p_jspace["naturalLight"];
+            artificialLight = p_jspace["artificialLight"];
+            projector = p_jspace["projector"];
+            sound = p_jspace["sound"];
+            cameras = p_jspace["cameras"];
+            review = Review();
+            review.SetBulkReviews(
+                p_jspace["review"]["score"].get<nljs::json::number_float_t>(),
+                p_jspace["review"]["numberOfReviews"],
+                p_jspace["review"]["reviews"].get<std::vector<std::string>>()
+            );
+            timer = Time(p_jspace["timer"]["dirhamsPerHour"], p_jspace["timer"]["originTime"]);
+            timer.SetBulkTimes(p_jspace["timer"]["times"].get<std::vector<unsigned long long>>());
+        }
     };
 
     // Class to manage spaces
@@ -598,43 +666,7 @@ namespace Space {
                 nljs::json jspaces;
                 for (auto space_ptr: spaces) {
                     if (space_ptr == nullptr) jspaces.push_back(nullptr);
-                    else {
-                        nljs::json jdims = {
-                            {"length", space_ptr->dims.GetLength()},
-                            {"width", space_ptr->dims.GetWidth()},
-                            {"height", space_ptr->dims.GetHeight()}
-                        }, jseats = {
-                            {"numberOfSeats", space_ptr->seats.GetNumberOfSeats()},
-                            {"slanted", space_ptr->seats.IsSurround()},
-                            {"surround", space_ptr->seats.IsSlanted()},
-                            {"comfy", space_ptr->seats.IsComfy()}
-                        }, jtimer = {
-                            {"originTime", (unsigned long long)space_ptr->timer.GetOriginTime()},
-                            {"times", nljs::json(space_ptr->timer.GetTimes())},
-                            {"dirhamsPerHour", space_ptr->timer.GetDirhamsPerHour()}
-                        }, jreview = {
-                            {"reviewed", space_ptr->review.IsReviewed()},
-                            {"score", space_ptr->review.GetReviewScore()},
-                            {"numberOfReviews", space_ptr->review.GetNumberOfReviews()},
-                            {"reviews", space_ptr->review.GetReviews()}
-                        }, jspace = {
-                            {"name", space_ptr->GetName()},
-                            {"ID", space_ptr->GetID()},
-                            {"numberOfPeople", space_ptr->GetNumberOfPeople()},
-                            {"outdoor", space_ptr->IsOutdoor()},
-                            {"catering", space_ptr->IsCatering()},
-                            {"naturalLight", space_ptr->IsNaturalLight()},
-                            {"artificialLight", space_ptr->IsArtificialLight()},
-                            {"projector", space_ptr->IsProjector()},
-                            {"sound", space_ptr->IsCameras()},
-                            {"cameras", space_ptr->IsCameras()},
-                            {"dims", jdims},
-                            {"seats", jseats},
-                            {"timer", jtimer},
-                            {"review", jreview}
-                        };
-                        jspaces.push_back(jspace);
-                    }
+                    else jspaces.push_back(space_ptr->Serialize());
                 }
                 // Write to file
                 outFile << std::setw(4) << jspaces << std::endl;
@@ -669,29 +701,8 @@ namespace Space {
                         }
                         spaces.push_back(nullptr);
                     } else {
-                        spaces.push_back(
-                            new Space(
-                                jspace["ID"],
-                                jspace["name"],
-                                jspace["dims"]["length"].get<nljs::json::number_float_t>(),
-                                jspace["dims"]["width"].get<nljs::json::number_float_t>(),
-                                jspace["dims"]["height"].get<nljs::json::number_float_t>(),
-                                jspace["numberOfPeople"],
-                                jspace["seats"]["numberOfSeats"], jspace["seats"]["slanted"],
-                                jspace["seats"]["surround"], jspace["seats"]["comfy"],
-                                jspace["timer"]["dirhamsPerHour"],
-                                jspace["outdoor"], jspace["catering"],
-                                jspace["naturalLight"], jspace["artificialLight"],
-                                jspace["projector"], jspace["sound"], jspace["cameras"]
-                            )
-                        );
-                        spaces.back()->review.SetBulkReviews(
-                            jspace["review"]["score"].get<nljs::json::number_float_t>(),
-                            jspace["review"]["numberOfReviews"],
-                            jspace["review"]["reviews"].get<std::vector<std::string>>()
-                        );
-                        spaces.back()->timer = Time(jspace["timer"]["dirhamsPerHour"], jspace["timer"]["originTime"]);
-                        spaces.back()->timer.SetBulkTimes(jspace["timer"]["times"].get<std::vector<unsigned long long>>());
+                        spaces.push_back(new Space());
+                        spaces.back()->Deserialize(jspace);
                     }
                 }
                 if (isFull) emptyID = spaces.size();
